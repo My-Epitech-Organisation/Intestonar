@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import sys
+
+def print_help():
+    print("USAGE:")
+    print("  interstonar [--global | --local] CONFIG_FILE Px Py Pz Vx Vy Vz")
+    print("")
+    print("DESCRIPTION:")
+    print("  --global   Launch program in global scene mode.")
+    print("  --local    Launch program in local scene mode.")
+    print("  Pi         Position coordinates of the rock (x, y, z).")
+    print("  Vi         Velocity vector of the rock (x, y, z).")
+    print("  CONFIG_FILE  TOML configuration file describing a scene.")
+    sys.exit(0)
+
+def main():
+    # Gérer l'option --help (ou -h) manuellement
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print_help()
+
+    # On s’attend à 1 argument pour le script lui-même,
+    # plus 1 pour le mode (--global ou --local),
+    # plus 1 pour le nom de fichier,
+    # plus 3 pour la position (Px, Py, Pz),
+    # plus 3 pour la vitesse (Vx, Vy, Vz) -> total 9
+    if len(sys.argv) != 9:
+        print("Error: invalid number of arguments", file=sys.stderr)
+        sys.exit(84)
+
+    mode = sys.argv[1]
+    config_file = sys.argv[2]
+
+    # Vérifier la validité du mode
+    if mode not in ("--global", "--local"):
+        print(f"Error: invalid mode {mode}", file=sys.stderr)
+        sys.exit(84)
+
+    # Récupérer les valeurs de position et vitesse
+    try:
+        px, py, pz = map(float, sys.argv[3:6])
+        vx, vy, vz = map(float, sys.argv[6:9])
+    except ValueError:
+        print("Error: position and velocity must be numeric (float)", file=sys.stderr)
+        sys.exit(84)
+
+    # Exemple d’affichage
+    print(f"Mode: {mode}")
+    print(f"Config file: {config_file}")
+    print(f"Initial position: ({px}, {py}, {pz})")
+    print(f"Initial velocity: ({vx}, {vy}, {vz})")
+
+    # À compléter avec votre logique...
+
+if __name__ == "__main__":
+    main()
