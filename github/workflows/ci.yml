@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check_interstonar:
+    name: Check presence of interstonar binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Verify interstonar file
+        run: |
+          if [[ ! -f interstonar ]]; then
+            echo "Error: interstonar file not found!"
+            exit 1
+          else
+            echo "interstonar file found."
+          fi
+
+  mirror:
+    name: Mirror to Epitech Repository
+    needs: [check_interstonar]
+    if: ${{ github.repository != 'EpitechPromo2028/G-CNA-400-NAN-4-1-interstonar-samuel.giret' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Mirror Repository to Epitech
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: git@github.com:EpitechPromo2028/G-CNA-400-NAN-4-1-interstonar-samuel.giret.git
+          ssh_private_key: ${{ secrets.EPITECH_SSH_KEY }}
