@@ -1,0 +1,10 @@
+[[bodies]]
+position = {x = 0, y = 0, z = 0}
+type = "sphere"
+radius = 1
+
+[[bodies]]
+position = {x = 0, y = 0, z = 0}
+type = "torus"
+inner_radius = 3
+outer_radius = 1
