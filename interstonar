@@ -5,11 +5,6 @@ INTERSTONAR - Main entry point
 Rock trajectory simulation in local and global scenes
 """
 
-"""
-INTERSTONAR - Main entry point
-Rock trajectory simulation in local and global scenes
-"""
-
 import sys
 from src.core.errors import InterstonarException, handle_error
 from src.parsing.arguments import parse_arguments
