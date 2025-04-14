@@ -31,22 +31,35 @@ def parse_config(config_file, mode):
         with open(config_file, 'rb') as f:
             config = toml.load(f)
     except FileNotFoundError:
+        # Ensure this raises ConfigError
         raise ConfigError(f"file {config_file} not found")
     except toml.TOMLDecodeError as e:
+        # Ensure this raises ConfigError for invalid TOML
         raise ConfigError(f"invalid TOML file {config_file}: {e}")
+    except Exception as e:
+        # Consider adding a general exception catch if other file issues occur
+        raise ConfigError(f"error reading config file {config_file}: {e}")
 
     # Verify that the 'bodies' key exists
     if "bodies" not in config:
+        # Ensure this raises ConfigError
         raise ConfigError("missing 'bodies' key in configuration file")
 
     # Get the bodies list from the configuration
     bodies = config["bodies"]
 
     # Validate bodies based on the simulation mode
-    if mode == "--global":
-        validate_global_bodies(bodies)
-    elif mode == "--local":
-        validate_local_bodies(bodies)
+    try:
+        if mode == "--global":
+            validate_global_bodies(bodies)
+        elif mode == "--local":
+            validate_local_bodies(bodies)
+    except ConfigError as e:
+        # Re-raise ConfigError if validation fails
+        raise e
+    except Exception as e:
+        # Catch potential unexpected errors during validation
+        raise ConfigError(f"validation error in {config_file}: {e}")
 
     return bodies
 

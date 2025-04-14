@@ -24,6 +24,7 @@ def main():
         velocity = args["velocity"]
 
         # Parse the configuration file
+        # Ensure any ConfigError raised here is caught below
         bodies = parse_config(config_file, mode)
 
         # Run the appropriate simulation based on mode
@@ -55,9 +56,12 @@ def main():
             result = run_local_simulation(bodies, position, velocity)
 
     except InterstonarException as e:
+        # This block should catch ConfigError and ArgumentError
+        # Ensure handle_error is called correctly
         handle_error(e.message)
     except Exception as e:
-        handle_error(str(e))
+        # This catches unexpected errors
+        handle_error(f"An unexpected error occurred: {str(e)}")
 
 
 if __name__ == "__main__":
