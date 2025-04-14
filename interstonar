@@ -1,6 +1,57 @@
 #!/usr/bin/env python3
 
 import sys
+import math
+try:
+    import tomllib as toml
+except ImportError:
+    import tomli as toml
+
+# def cube_sdf(px, py, pz, cx, cy, cz, ex, ey, ez):
+#     dx, dy, dz = abs(px - cx) - ex, abs(py - cy) - ey, abs(pz - cz) - ez
+#     outside_dist = math.sqrt(max(dx, 0)**2 + max(dy, 0)**2 + max(dz, 0)**2)
+#     inside_dist = min(max(dx, dy, dz), 0)
+    
+#     return outside_dist + inside_dist
+
+# def cylinder_sdf(px, py, pz, ax, ay, az, dx, dy, dz, r, h=None):
+#     # Compute vector from cylinder base to point P
+#     apx, apy, apz = px - ax, py - ay, pz - az
+#     # Compute the projection of AP onto the axis direction D
+#     t = apx * dx + apy * dy + apz * dz  # Scalar projection
+#     # Compute the closest point Q on the axis
+#     qx, qy, qz = ax + t * dx, ay + t * dy, az + t * dz
+#     # Compute the perpendicular distance from P to the axis
+#     dx, dy, dz = px - qx, py - qy, pz - qz
+#     dist_to_axis = math.sqrt(dx**2 + dy**2 + dz**2) - r
+#     if h is not None:  # Finite cylinder case
+#         if t < 0:  # Below bottom cap
+#             cap_dist = math.sqrt(apx**2 + apy**2 + apz**2) - r
+#         elif t > h:  # Above top cap
+#             topx, topy, topz = ax + h * dx, ay + h * dy, az + h * dz
+#             top_dx, top_dy, top_dz = px - topx, py - topy, pz - topz
+#             cap_dist = math.sqrt(top_dx**2 + top_dy**2 + top_dz**2) - r
+#         else:  # Inside height range
+#             cap_dist = dist_to_axis
+#         return min(dist_to_axis, cap_dist)
+#     return dist_to_axis  # Infinite cylinder case
+
+
+# def torus_sdf(px, py, pz, cx, cy, cz, R, r):
+#     px -= cx
+#     py -= cy
+#     pz -= cz
+
+#     # Compute torus SDF
+#     qx = math.sqrt(px**2 + py**2) - R  # Distance to the major circle
+#     distance = math.sqrt(qx**2 + pz**2) - r
+#     return distance
+
+
+# def sphere_sdf(px, py, pz, cx, cy, cz, r):
+#     distance = math.sqrt((px - cx) ** 2 + (py - cy) ** 2 + (pz - cz) ** 2)
+#     return distance - r
+
 
 def print_help():
     print("USAGE:")
@@ -13,6 +64,24 @@ def print_help():
     print("  Vi         Velocity vector of the rock (x, y, z).")
     print("  CONFIG_FILE  TOML configuration file describing a scene.")
     sys.exit(0)
+
+def parse_config(config_file):
+    try:
+        with open(config_file, 'rb') as f:
+            config = toml.load(f)
+    except FileNotFoundError:
+        print(f"Error: file {config_file} not found", file=sys.stderr)
+        sys.exit(84)
+    except toml.TOMLDecodeError as e:
+        print(f"Error: invalid TOML file {config_file}: {e}", file=sys.stderr)
+        sys.exit(84)
+
+    # Vérifier la présence de la clé "bodies"
+    if "bodies" not in config:
+        print("Error: missing 'bodies' key in configuration file", file=sys.stderr)
+        sys.exit(84)
+
+    return config["bodies"]
 
 def main():
     # Gérer l'option --help (ou -h) manuellement
@@ -50,7 +119,9 @@ def main():
     print(f"Initial position: ({px}, {py}, {pz})")
     print(f"Initial velocity: ({vx}, {vy}, {vz})")
 
-    # À compléter avec votre logique...
+    # Parse the configuration file
+    bodies = parse_config(config_file)
+    print(f"Parsed bodies: {bodies}")
 
 if __name__ == "__main__":
     main()
