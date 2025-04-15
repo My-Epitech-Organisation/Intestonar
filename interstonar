@@ -29,10 +29,6 @@ def main():
 
         # Run the appropriate simulation based on mode
         if mode == "--global":
-            print(f"Mode: {mode}")
-            print(f"Config file: {config_file}")
-            print(f"Initial position: ({position['x']}, {position['y']}, {position['z']})")
-            print(f"Initial velocity: ({velocity['x']}, {velocity['y']}, {velocity['z']})")
 
             # Run the global simulation
             result = run_global_simulation(bodies, position, velocity)
