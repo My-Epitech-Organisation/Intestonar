@@ -34,8 +34,10 @@ def main():
             print(f"Initial position: ({position['x']}, {position['y']}, {position['z']})")
             print(f"Initial velocity: ({velocity['x']}, {velocity['y']}, {velocity['z']})")
 
-            # Run the global simulation (to be implemented)
+            # Run the global simulation
             result = run_global_simulation(bodies, position, velocity)
+            # Afficher le résultat
+            print(result)
 
         elif mode == "--local":
             print(f"Rock thrown at the point ({position['x']:.2f}, {position['y']:.2f}, {position['z']:.2f}) and parallel to the vector ({velocity['x']:.2f}, {velocity['y']:.2f}, {velocity['z']:.2f})")
@@ -52,8 +54,10 @@ def main():
                 elif body["type"] == "torus":
                     print(f"Torus of inner radius {body['inner_radius']:.2f} and outer radius {body['outer_radius']:.2f} at position ({body['position']['x']:.2f}, {body['position']['y']:.2f}, {body['position']['z']:.2f})")
 
-            # Run the local simulation (to be implemented)
+            # Run the local simulation
             result = run_local_simulation(bodies, position, velocity)
+            # Afficher le résultat
+            print(f"Result: {result}")
 
     except InterstonarException as e:
         # This block should catch ConfigError and ArgumentError
