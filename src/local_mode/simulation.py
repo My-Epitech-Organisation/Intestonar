@@ -1,146 +1,119 @@
 #!/usr/bin/env python3
-
-"""
-Local simulation module for Interstonar.
-Handles ray marching for local scene objects.
-"""
-
 import math
 
-# Constants
-MAX_STEPS = 1000  # Maximum number of steps for ray marching
-MAX_DISTANCE = 1000.0  # Maximum distance to consider for ray marching
-MIN_DISTANCE = 0.1  # Distance threshold for intersection
-
-#################################################################################
-
-class Sphere:
-    def __init__(self, x, y, z, radius):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.radius = radius
-        self.classname = "Sphere"
-
-class Torus:
-    def __init__(self, x, y, z, inRadius, outRadius):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.inRadius = inRadius
-        self.outRadius = outRadius
-        self.classname = "Torus"
-
-def local(bodies, argv):
-    # print(bodies)
-    print(
-        f"Rock thrown at the point ({float(argv[3])}, {float(argv[4])}, {float(argv[5])}) "
-        f"and parallel to the vector ({float(argv[6])}, {float(argv[7])}, {float(argv[8])})"
-    )
-
-###################################################################################################
-
 def run_local_simulation(bodies, position, velocity):
-    """
-    Run local simulation using ray marching.
+    # Extract initial position and velocity components
+    current_pos = {
+        'x': position['x'],
+        'y': position['y'],
+        'z': position['z']
+    }
+    dir_x = velocity['x']
+    dir_y = velocity['y']
+    dir_z = velocity['z']
 
-    Args:
-        bodies (list): List of bodies from the configuration
-        position (dict): Initial position of the rock (x, y, z)
-        velocity (dict): Direction vector of the rock (x, y, z)
+    # Calculate the direction vector (normalized)
+    magnitude = math.sqrt(dir_x**2 + dir_y**2 + dir_z**2)
+    if magnitude == 0:
+        return "Invalid direction vector (zero magnitude)"
+    step_x = dir_x / magnitude
+    step_y = dir_y / magnitude
+    step_z = dir_z / magnitude
+    
+    total_distance = 0.0
+    steps = 0
+    
+    while steps < 1000 and total_distance <= 1000.0:
+        # Calculate SDF for all bodies and find the minimum
+        min_sdf = float('inf')
+        for body in bodies:
+            # Calculate SDF based on body type
+            if body['type'] == 'sphere':
+                dx = current_pos['x'] - body['position']['x']
+                dy = current_pos['y'] - body['position']['y']
+                dz = current_pos['z'] - body['position']['z']
+                distance = math.sqrt(dx**2 + dy**2 + dz**2)
+                sdf = distance - body['radius']
+            
+            elif body['type'] == 'cylinder':
+                # Radial distance in x-y plane
+                dx = current_pos['x'] - body['position']['x']
+                dy = current_pos['y'] - body['position']['y']
+                radial_dist = math.sqrt(dx**2 + dy**2) - body['radius']
+                
+                if 'height' in body and body['height'] > 0:
+                    # Finite cylinder: check height along z-axis
+                    dz = current_pos['z'] - body['position']['z']
+                    half_height = body['height'] / 2.0
+                    vertical_dist = abs(dz) - half_height
+                    sdf = max(radial_dist, vertical_dist)
+                else:
+                    # Infinite cylinder
+                    sdf = radial_dist
+            
+            elif body['type'] == 'box':
+                dx = abs(current_pos['x'] - body['position']['x']) - body['sides']['x'] / 2.0
+                dy = abs(current_pos['y'] - body['position']['y']) - body['sides']['y'] / 2.0
+                dz = abs(current_pos['z'] - body['position']['z']) - body['sides']['z'] / 2.0
+                
+                # Calculate SDF for box
+                max_dim = max(dx, dy, dz)
+                if max_dim < 0:
+                    sdf = max_dim  # Inside the box
+                else:
+                    # Outside, calculate distance to the closest edge or corner
+                    dx_clamped = max(dx, 0.0)
+                    dy_clamped = max(dy, 0.0)
+                    dz_clamped = max(dz, 0.0)
+                    sdf = math.sqrt(dx_clamped**2 + dy_clamped**2 + dz_clamped**2)
+            
+            elif body['type'] == 'torus':
+                # Translate to local coordinates
+                dx = current_pos['x'] - body['position']['x']
+                dy = current_pos['y'] - body['position']['y']
+                dz = current_pos['z'] - body['position']['z']
+                
+                # Project onto x-y plane and adjust for outer radius
+                xy_dist = math.sqrt(dx**2 + dy**2)
+                q = (xy_dist - body['outer_radius'], dz)
+                sdf = math.sqrt(q[0]**2 + q[1]**2) - body['inner_radius']
+            
+            else:
+                continue  # Unknown body type
+            
+            if sdf < min_sdf:
+                min_sdf = sdf
+        
+        # Check intersection condition
+        if min_sdf <= 0.1:
+            step_distance = min_sdf
+            current_pos['x'] += step_x * step_distance
+            current_pos['y'] += step_y * step_distance
+            current_pos['z'] += step_z * step_distance
+            total_distance += step_distance
+            steps += 1
+            print(f"Step {steps}: ({current_pos['x']:.2f}, {current_pos['y']:.2f}, {current_pos['z']:.2f})")
 
-    Returns:
-        str: Result of simulation ("Intersection", "Out of scene", or "Time out")
-    """
-    # This function will be implemented later
-    pass
+            return "Intersection"
 
-
-def sphere_sdf(point, sphere):
-    """
-    Signed distance function for a sphere.
-
-    Args:
-        point (dict): Point coordinates (x, y, z)
-        sphere (dict): Sphere definition with position and radius
-
-    Returns:
-        float: Signed distance from point to sphere
-    """
-    # This function will be implemented later
-    pass
-
-
-def cylinder_sdf(point, cylinder):
-    """
-    Signed distance function for a cylinder.
-
-    Args:
-        point (dict): Point coordinates (x, y, z)
-        cylinder (dict): Cylinder definition with position, radius, and optional height
-
-    Returns:
-        float: Signed distance from point to cylinder
-    """
-    # This function will be implemented later
-    pass
-
-
-def box_sdf(point, box):
-    """
-    Signed distance function for a box.
-
-    Args:
-        point (dict): Point coordinates (x, y, z)
-        box (dict): Box definition with position and sides
-
-    Returns:
-        float: Signed distance from point to box
-    """
-    # This function will be implemented later
-    pass
-
-
-def torus_sdf(point, torus):
-    """
-    Signed distance function for a torus.
-
-    Args:
-        point (dict): Point coordinates (x, y, z)
-        torus (dict): Torus definition with position, inner_radius, and outer_radius
-
-    Returns:
-        float: Signed distance from point to torus
-    """
-    # This function will be implemented later
-    pass
-
-
-def scene_sdf(point, bodies):
-    """
-    Signed distance function for the entire scene.
-    Returns the minimum distance to any object in the scene.
-
-    Args:
-        point (dict): Point coordinates (x, y, z)
-        bodies (list): List of all bodies in the scene
-
-    Returns:
-        float: Minimum signed distance from point to any body
-    """
-    # This function will be implemented later
-    pass
-
-
-def normalize_vector(vector):
-    """
-    Normalize a vector to have unit length.
-
-    Args:
-        vector (dict): Vector with x, y, z components
-
-    Returns:
-        dict: Normalized vector
-    """
-    # This function will be implemented later
-    pass
+        # Check out of scene
+        if min_sdf > 1000.0:
+            print(f"Step {steps + 1}: ({current_pos['x']:.2f}, {current_pos['y']:.2f}, {current_pos['z']:.2f})")
+            return "Out of scene"
+        
+        # Move along the direction by the minimum SDF
+        step_distance = min_sdf
+        current_pos['x'] += step_x * step_distance
+        current_pos['y'] += step_y * step_distance
+        current_pos['z'] += step_z * step_distance
+        total_distance += step_distance
+        steps += 1
+        
+        # Print current step
+        print(f"Step {steps}: ({current_pos['x']:.2f}, {current_pos['y']:.2f}, {current_pos['z']:.2f})")
+    
+    # Check termination after loop
+    if steps >= 1000:
+        return "Time out"
+    else:
+        return "Out of scene"
