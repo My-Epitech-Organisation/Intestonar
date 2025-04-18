@@ -53,6 +53,24 @@ def run_global_simulation(bodies, rock_position, rock_velocity):
 
     # Run simulation for up to MAX_STEPS
     for step in range(1, MAX_STEPS + 1):
+
+        # 6. Calculate net forces on all celestial bodies
+        forces = []
+        for body in bodies:
+            # Create list of other bodies excluding current one
+            other_bodies = [b for b in bodies if b != body]
+
+            # Add rock to other bodies (rock affects celestial bodies)
+            other_bodies.append(rock)
+
+            # Calculate net force on this body
+            force = calculate_net_force(body, other_bodies)
+            forces.append(force)
+
+        # 7. Calculate net force on rock (from all celestial bodies)
+        rock_force = calculate_net_force(rock, bodies)
+
+
         # 1. Update positions of all celestial bodies
         for body in bodies:
             body["position"] = update_position(body, DELTA_TIME)
@@ -94,22 +112,6 @@ def run_global_simulation(bodies, rock_position, rock_velocity):
                 bodies.append(merged_body)
 
                 print(f"Collision between {merged_body['name']} bodies")
-
-        # 6. Calculate net forces on all celestial bodies
-        forces = []
-        for body in bodies:
-            # Create list of other bodies excluding current one
-            other_bodies = [b for b in bodies if b != body]
-
-            # Add rock to other bodies (rock affects celestial bodies)
-            other_bodies.append(rock)
-
-            # Calculate net force on this body
-            force = calculate_net_force(body, other_bodies)
-            forces.append(force)
-
-        # 7. Calculate net force on rock (from all celestial bodies)
-        rock_force = calculate_net_force(rock, bodies)
 
         # 8. Update velocities based on forces
         for i, body in enumerate(bodies):
