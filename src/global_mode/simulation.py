@@ -2,7 +2,8 @@
 
 """
 Global simulation module for Interstonar.
-Handles gravitational simulation of celestial bodies.
+Handles gravitational simulation of celestial bodies and trajectory
+of a projectile (rock) through space using Newton's laws of motion.
 """
 
 import math
@@ -13,23 +14,26 @@ from src.core.physics import (calculate_gravitational_force, calculate_net_force
                              calculate_acceleration, update_velocity, update_position,
                              merge_bodies, check_all_collisions, is_collision_with_rock)
 
-# Gravitational constant (G)
-G = 6.674e-11  # m^3 kg^-1 s^-2
+# Physical constants
+G = 6.674e-11  # Gravitational constant (m^3 kg^-1 s^-2)
 
-# Time step for simulation (1 hour in seconds)
-DELTA_TIME = 3600
+# Simulation parameters
+DELTA_TIME = 3600  # Time step (1 hour in seconds)
+MAX_STEPS = 365 * 24  # Maximum simulation time (365 days)
 
-# Maximum simulation time (365 days in hours)
-MAX_STEPS = 365 * 24
-
-# Rock mass and radius constants
-ROCK_MASS = 1.0  # 1kg
-ROCK_RADIUS = 1.0  # 1m (small enough for our simulation)
+# Rock properties
+ROCK_MASS = 1.0  # Mass of the projectile (1kg)
+ROCK_RADIUS = 1.0  # Radius of the projectile (1m)
 
 
 def run_global_simulation(bodies, rock_position, rock_velocity):
     """
-    Run global simulation of celestial bodies and a rock.
+    Run global simulation of celestial bodies and a rock using Newtonian physics.
+    
+    The simulation uses Euler integration with a fixed time step to calculate
+    the trajectories of all bodies, including the rock, under gravitational forces.
+    It continues until either the rock collides with a body, or the maximum
+    simulation time is reached.
 
     Args:
         bodies (list): List of bodies from the configuration
@@ -53,82 +57,83 @@ def run_global_simulation(bodies, rock_position, rock_velocity):
 
     # Run simulation for up to MAX_STEPS
     for step in range(1, MAX_STEPS + 1):
-
-        # 6. Calculate net forces on all celestial bodies
+        # Calculate forces on all bodies
+        # These forces will be used to update velocities after position updates
         forces = []
         for body in bodies:
-            # Create list of other bodies excluding current one
+            # Get all bodies that affect the current body (excluding itself)
             other_bodies = [b for b in bodies if b != body]
-
-            # Add rock to other bodies (rock affects celestial bodies)
+            
+            # Include rock's gravitational effect on celestial bodies
             other_bodies.append(rock)
-
-            # Calculate net force on this body
+            
+            # Calculate net gravitational force on current body
             force = calculate_net_force(body, other_bodies)
             forces.append(force)
 
-        # 7. Calculate net force on rock (from all celestial bodies)
+        # Calculate gravitational force on the rock from all celestial bodies
         rock_force = calculate_net_force(rock, bodies)
 
-
-        # 1. Update positions of all celestial bodies
+        # Update positions using current velocities
         for body in bodies:
             body["position"] = update_position(body, DELTA_TIME)
-
-        # 2. Update rock position
+        
+        # Update rock position
         rock["position"] = update_position(rock, DELTA_TIME)
 
-        # 3. Display rock position at this step
+        # Display rock position at current time step
         print(f"At time t = {step}: rock is ({rock['position']['x']:.3f}, {rock['position']['y']:.3f}, {rock['position']['z']:.3f})")
 
-        # 4. Check for collisions between rock and celestial bodies
+        # Check for collisions between rock and celestial bodies
         collision_result, body_index = check_rock_collisions(bodies, rock)
         if collision_result:
-            # Rock collided with a body
             collided_body = bodies[body_index]
             print(f"Collision between rock and {collided_body['name']}")
 
-            # Check if the body is a goal
+            # Mission succeeds if the rock collides with a goal body
             if "goal" in collided_body and collided_body["goal"]:
                 return "Mission success"
             else:
                 return "Mission failure"
 
-        # 5. Check for collisions between celestial bodies
+        # Check for and handle collisions between celestial bodies
         body_collisions = check_all_collisions(bodies)
         if body_collisions:
-            # Handle collisions (starting from highest indices to avoid issues when removing items)
+            # Process collisions in reverse index order to avoid invalidating indices
             body_collisions.sort(reverse=True, key=lambda x: x[0])
 
             for i, j in body_collisions:
-                # Create a merged body
+                # Merge the colliding bodies according to project rules
                 merged_body = merge_bodies(bodies[i], bodies[j])
 
-                # Remove the colliding bodies
+                # Remove the original bodies (in correct order to maintain valid indices)
                 bodies.pop(i)
                 bodies.pop(j if j > i else j)
 
-                # Add the merged body
+                # Add the merged body to the simulation
                 bodies.append(merged_body)
 
                 print(f"Collision between {merged_body['name']} bodies")
 
-        # 8. Update velocities based on forces
+        # Update velocities using the calculated forces
         for i, body in enumerate(bodies):
             acceleration = calculate_acceleration(forces[i], body["mass"])
             body["direction"] = update_velocity(body, acceleration, DELTA_TIME)
 
-        # 9. Update rock velocity
+        # Update rock velocity
         rock_acceleration = calculate_acceleration(rock_force, rock["mass"])
         rock["direction"] = update_velocity(rock, rock_acceleration, DELTA_TIME)
 
-    # If we've reached the maximum number of steps without a collision
+    # If simulation reaches MAX_STEPS without any collision with a goal
     return "Mission failure"
 
 
 def check_rock_collisions(bodies, rock):
     """
     Check for collisions between the rock and any celestial body.
+    
+    A collision occurs when the distance between the centers of two bodies
+    is less than or equal to the sum of their radii.
 
     Args:
         bodies (list): List of all celestial bodies
