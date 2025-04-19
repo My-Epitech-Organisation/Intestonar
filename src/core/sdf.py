@@ -213,6 +213,8 @@ def ray_march(origin, direction, bodies, max_steps=1000, min_distance=0.1, max_d
     total_distance = 0.0
     current_point = origin.copy()
 
+    tmp_iteration_far = 0
+    tmp_iteration_intersection = 0
     for step in range(max_steps):
         # Calculate minimum signed distance to any object
         dist, hit_index = min_sdf(current_point, bodies)
@@ -222,11 +224,17 @@ def ray_march(origin, direction, bodies, max_steps=1000, min_distance=0.1, max_d
 
         # Check for intersection
         if dist <= min_distance:
-            return "Intersection", steps, hit_index
+            if tmp_iteration_intersection > 0:
+                return "Intersection", steps, hit_index
+            else:
+                tmp_iteration_intersection += 1
 
         # Check if we're too far
-        if dist > max_distance or total_distance > max_distance:
-            return "Out of scene", steps, -1
+        if dist > max_distance:
+            if tmp_iteration_far > 0:
+                return "Out of scene", steps, -1
+            else:
+                tmp_iteration_far += 1
 
         # Move along the ray by the safe distance
         total_distance += dist
