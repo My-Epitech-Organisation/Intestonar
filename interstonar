@@ -48,7 +48,7 @@ def main():
                 elif body["type"] == "box":
                     print(f"Box of dimensions ({body['sides']['x']:.2f}, {body['sides']['y']:.2f}, {body['sides']['z']:.2f}) at position ({body['position']['x']:.2f}, {body['position']['y']:.2f}, {body['position']['z']:.2f})")
                 elif body["type"] == "torus":
-                    print(f"Torus of inner radius {body['inner_radius']:.2f} and outer radius {body['outer_radius']:.2f} at position ({body['position']['x']:.2f}, {body['position']['y']:.2f}, {body['position']['z']:.2f})")
+                    print(f"Torus of inner radius {body['inner_radius']:.2f} and outer radius {body['outer_radius']:.2f} at position ({body['position']['x']:.2f}, {body['position']['y']:.2f}, {body['position']['z']:.2f})\n")
 
             # Run the local simulation
             result = run_local_simulation(bodies, position, velocity)
