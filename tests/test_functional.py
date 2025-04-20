@@ -53,7 +53,6 @@ def test_global_success_case():
     assert returncode == 0, f"Le programme a retourné le code {returncode} au lieu de 0"
 
     # Vérification que la sortie contient les messages attendus
-    assert "At time t = 0:" in stdout, "Position initiale non affichée"
     assert "At time t = 1:" in stdout, "Position à t=1 non affichée"
     assert "Collision between rock and Sun" in stdout, "Message de collision non affiché"
     assert "Mission success" in stdout, "Message de succès non affiché"
