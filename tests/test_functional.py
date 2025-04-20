@@ -139,5 +139,79 @@ def test_global_invalid_config():
     assert "Error" in stderr, "Message d'erreur non affiché"
 
 
+def test_local_success_case():
+    args = [
+        '--local',
+        str(TOML_DIR / 'local_scene_example.toml'),
+        '10', '0', '35', '-1', '0', '-2'
+    ]
+
+    returncode, stdout, stderr = run_interstonar(args)
+
+    # Vérification du code de retour
+    assert returncode == 0, f"Le programme a retourné le code {returncode} au lieu de 0"
+
+    # Vérification que la sortie contient les messages attendus
+    assert "Rock thrown at the point (10.00, 0.00, 35.00) and parallel to the vector (-1.00, 0.00, -2.00)" in stdout, "Message de lancement de la roche non affiché"
+    assert "Sphere of radius 1.00 at position (0.00, 0.00, 0.00)" in stdout, "Message de la sphère non affiché"
+    assert "Cylinder of radius 1.00 and height 100.00 at position (0.00, 0.00, 0.00)" in stdout, "Message du cylindre non affiché"
+    assert "Box of dimensions (10.00, 10.00, 10.00) at position (0.00, 0.00, 0.00)" in stdout, "Message de la box non affiché"
+    assert "Torus of inner radius 3.00 and outer radius 1.00 at position (0.00, 0.00, 0.00)" in stdout, "Message du torus non affiché"
+
+    # Vérification des étapes intermédiaires et du résultat final
+    assert "Step 1: (5.98, 0.00, 26.95)" in stdout, "Étape 1 non affichée ou incorrecte"
+    assert "Step 2: (3.75, 0.00, 22.50)" in stdout, "Étape 2 non affichée ou incorrecte"
+    assert "Step 3: (2.52, 0.00, 20.04)" in stdout, "Étape 3 non affichée ou incorrecte"
+    assert "Step 4: (1.84, 0.00, 18.68)" in stdout, "Étape 4 non affichée ou incorrecte"
+    assert "Step 5: (1.46, 0.00, 17.93)" in stdout, "Étape 5 non affichée ou incorrecte"
+    assert "Step 6: (1.26, 0.00, 17.51)" in stdout, "Étape 6 non affichée ou incorrecte"
+    assert "Step 7: (1.14, 0.00, 17.28)" in stdout, "Étape 7 non affichée ou incorrecte"
+    assert "Step 8: (1.08, 0.00, 17.16)" in stdout, "Étape 8 non affichée ou incorrecte"
+    assert "Step 9: (1.04, 0.00, 17.09)" in stdout, "Étape 9 non affichée ou incorrecte"
+    assert "Result: Intersection" in stdout, "Résultat d'intersection non affiché ou incorrect"
+
+def test_local_out_of_scene_case():
+    """Test du cas où la roche sort de la scène."""
+    args = [
+        '--local',
+        str(TOML_DIR / 'local_scene_example.toml'),
+        '10', '0', '35', '-1', '-1', '-20'
+    ]
+
+    returncode, stdout, stderr = run_interstonar(args)
+
+    # Vérification du code de retour
+    assert returncode == 0, f"Le programme a retourné le code {returncode} au lieu de 0"
+
+    # Vérification que la sortie contient les messages attendus
+    assert "Rock thrown at the point (10.00, 0.00, 35.00) and parallel to the vector (-1.00, -1.00, -20.00)" in stdout, "Message de lancement de la roche non affiché"
+    assert "Sphere of radius 1.00 at position (0.00, 0.00, 0.00)" in stdout, "Message de la sphère non affiché"
+    assert "Cylinder of radius 1.00 and height 100.00 at position (0.00, 0.00, 0.00)" in stdout, "Message du cylindre non affiché"
+    assert "Box of dimensions (10.00, 10.00, 10.00) at position (0.00, 0.00, 0.00)" in stdout, "Message de la box non affiché"
+    assert "Torus of inner radius 3.00 and outer radius 1.00 at position (0.00, 0.00, 0.00)" in stdout, "Message du torus non affiché"
+
+    # Vérification des étapes intermédiaires et du résultat final
+    assert "Step 1: (9.55, -0.45, 26.02)" in stdout, "Étape 1 non affichée ou incorrecte"
+    assert "Step 10: (7.19, -2.81, -21.27)" in stdout, "Étape 10 non affichée ou incorrecte"
+    assert "Step 20: (-3.28, -13.28, -230.64)" in stdout, "Étape 20 non affichée ou incorrecte"
+    assert "Step 24: (-138.72, -148.72, -2939.50)" in stdout, "Étape 24 non affichée ou incorrecte"
+    assert "Result: Out of scene" in stdout, "Résultat 'Out of scene' non affiché ou incorrect"
+
+def test_local_timeout_case():
+    """Test du cas où la roche ne rencontre aucun objet et atteint un timeout."""
+    args = [
+        '--local',
+        str(TOML_DIR / 'infinite_cylinder.toml'),
+        '3', '-6.2', '12', '0', '0', '10.3'
+    ]
+
+    returncode, stdout, stderr = run_interstonar(args)
+
+    # Vérification du code de retour
+    assert returncode == 0, f"Le programme a retourné le code {returncode} au lieu de 0"
+
+    # Vérification que la sortie contient le message de timeout
+    assert "Result: Time out" in stdout, "Message de timeout non affiché ou incorrect"
+
 if __name__ == "__main__":
     pytest.main(["-v", __file__])
